@@ -1,8 +1,5 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-
 export default function NotFound() {
   return (
     <div className="flex items-center justify-center min-h-screen">
