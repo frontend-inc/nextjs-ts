@@ -50,6 +50,7 @@ function Command({
 
   const defaultFilter = React.useCallback((value: string, search: string) => {
     if (!shouldFilter) return true
+    if (search.length === 0) return true
     return value.toLowerCase().includes(search.toLowerCase())
   }, [shouldFilter])
 
@@ -114,7 +115,7 @@ function Command({
       <div
         data-slot="command"
         className={cn(
-          "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
+          "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md border border-border",
           className
         )}
         onKeyDown={handleKeyDown}
@@ -131,7 +132,7 @@ function CommandDialog({
   description = "Search for a command to run...",
   children,
   className,
-  showCloseButton = true,
+  showCloseButton = false,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
   title?: string
@@ -146,10 +147,10 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent
-        className={cn("overflow-hidden p-0", className)}
+        className={cn("overflow-hidden p-0 bg-transparent border-none shadow-none max-w-[450px]", className)}
         showCloseButton={showCloseButton}
       >
-        <Command className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input]]:h-12 [&_[data-slot=command-item]]:px-2 [&_[data-slot=command-item]]:py-3 [&_svg]:h-5 [&_svg]:w-5">
+        <Command className="rounded-lg border shadow-md w-full [&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input]]:h-12 [&_[data-slot=command-item]]:px-2 [&_[data-slot=command-item]]:py-3 [&_svg]:h-5 [&_svg]:w-5">
           {children}
         </Command>
       </DialogContent>
@@ -166,7 +167,7 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b px-3"
+      className="flex h-9 items-center gap-2 border-b border-border px-3"
     >
       <SearchIcon className="size-4 shrink-0 opacity-50" />
       <input
@@ -211,7 +212,9 @@ function CommandEmpty({
 
   React.useEffect(() => {
     const checkEmpty = () => {
-      const visibleItems = items.current.filter((item) => item && !item.hidden)
+      const visibleItems = search.length === 0
+        ? items.current.filter((item) => item)
+        : items.current.filter((item) => item && !item.hidden)
       setIsEmpty(search.length > 0 && visibleItems.length === 0)
     }
 
@@ -248,6 +251,11 @@ function CommandGroup({
   const [hasVisibleItems, setHasVisibleItems] = React.useState(true)
 
   React.useEffect(() => {
+    if (search.length === 0) {
+      setHasVisibleItems(true)
+      return
+    }
+
     const checkVisibility = () => {
       if (groupRef.current) {
         const items = groupRef.current.querySelectorAll('[data-slot="command-item"]')
@@ -262,13 +270,12 @@ function CommandGroup({
     return () => clearTimeout(timeout)
   }, [search])
 
-  if (!hasVisibleItems) return null
-
   return (
     <div
       ref={groupRef}
       data-slot="command-group"
       role="group"
+      hidden={!hasVisibleItems}
       className={cn(
         "text-foreground overflow-hidden p-1",
         className
@@ -308,6 +315,16 @@ interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const itemIndexCounter = { current: 0 }
 
+function getTextFromChildren(children: React.ReactNode): string {
+  if (typeof children === "string") return children
+  if (typeof children === "number") return String(children)
+  if (Array.isArray(children)) return children.map(getTextFromChildren).join(" ")
+  if (React.isValidElement(children) && children.props.children) {
+    return getTextFromChildren(children.props.children)
+  }
+  return ""
+}
+
 function CommandItem({
   className,
   disabled,
@@ -332,9 +349,9 @@ function CommandItem({
     registerItem(ref.current, indexRef.current)
   }, [registerItem])
 
-  const searchableText = value || (typeof children === "string" ? children : "")
+  const searchableText = value || getTextFromChildren(children)
   const allSearchableText = [searchableText, ...keywords].join(" ")
-  const isVisible = filter(allSearchableText, search)
+  const isVisible = search.length === 0 ? true : filter(allSearchableText, search)
   const isSelected = selectedIndex === indexRef.current && isVisible
 
   const handleSelect = () => {
