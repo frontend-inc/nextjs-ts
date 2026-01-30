@@ -8,35 +8,26 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
-interface InputGroupProps extends React.ComponentProps<"div"> {
-  layout?: "inline" | "stacked"
-}
-
-function InputGroup({ className, layout, ...props }: InputGroupProps) {
-  // Detect layout from children if not explicitly set
-  const hasBlockAddon = React.Children.toArray(props.children).some(
-    (child) =>
-      React.isValidElement(child) &&
-      ((child.props as any)?.align === "block-end" ||
-       (child.props as any)?.align === "block-start")
-  )
-
-  const isStacked = layout === "stacked" || hasBlockAddon
-
+function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-group"
-      data-layout={isStacked ? "stacked" : "inline"}
       role="group"
       className={cn(
-        "group/input-group border-input dark:bg-input/30 relative flex w-full rounded-md border shadow-xs transition-[color,box-shadow] outline-none",
-        isStacked ? "h-auto flex-col" : "h-9 min-w-0 items-center",
+        "group/input-group border-input dark:bg-input/30 relative flex w-full items-center rounded-md border shadow-xs transition-[color,box-shadow] outline-none",
+        "h-9 min-w-0 has-[>textarea]:h-auto",
+
+        // Variants based on alignment.
+        "has-[>[data-align=inline-start]]:[&>input]:pl-2",
+        "has-[>[data-align=inline-end]]:[&>input]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
 
         // Focus state.
-        "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]",
+        "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot=input-group-control]:focus-visible]:ring-[3px]",
 
         // Error state.
-        "has-[[aria-invalid=true]]:ring-destructive/20 has-[[aria-invalid=true]]:border-destructive dark:has-[[aria-invalid=true]]:ring-destructive/40",
+        "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
 
         className
       )}
@@ -87,7 +78,6 @@ function InputGroupAddon({
     />
   )
 }
-InputGroupAddon.displayName = "InputGroupAddon"
 
 const inputGroupButtonVariants = cva(
   "text-sm shadow-none flex gap-2 items-center",

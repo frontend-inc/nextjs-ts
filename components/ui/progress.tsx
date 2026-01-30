@@ -1,44 +1,31 @@
-import React from 'react';
+"use client"
 
-// Utility function to combine classNames
-function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
 
-interface ProgressProps extends React.ComponentProps<'div'> {
-  value?: number;
-  max?: number;
-}
+import { cn } from "@/lib/utils"
 
 function Progress({
   className,
-  value = 0,
-  max = 100,
+  value,
   ...props
-}: ProgressProps) {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
-
+}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
   return (
-    <div
+    <ProgressPrimitive.Root
       data-slot="progress"
       className={cn(
-        'bg-primary/20 relative h-2 w-full overflow-hidden rounded-full',
+        "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
         className
       )}
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={max}
-      aria-valuenow={value}
       {...props}
     >
-      <div
+      <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
         className="bg-primary h-full w-full flex-1 transition-all"
-        style={{ transform: `translateX(-${100 - percentage}%)` }}
+        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
       />
-    </div>
-  );
+    </ProgressPrimitive.Root>
+  )
 }
 
-export { Progress };
-export type { ProgressProps };
+export { Progress }

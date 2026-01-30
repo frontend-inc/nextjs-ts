@@ -1,97 +1,83 @@
-import React from 'react';
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
 
-// Utility function to combine classNames
-function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+import { cn } from "@/lib/utils"
+import { Separator } from "@/components/ui/separator"
 
-// Button group variants helper
-function getButtonGroupVariants(
-  orientation: 'horizontal' | 'vertical'
-): string {
-  const baseStyles =
-    'flex w-fit items-stretch [&>*]:focus-visible:z-10 [&>*]:focus-visible:relative [&>[data-slot=select-trigger]:not([class*="w-"])]:w-fit [&>input]:flex-1 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md has-[>[data-slot=button-group]]:gap-2';
-
-  const orientationStyles = {
-    horizontal:
-      '[&>*:not(:first-child)]:rounded-l-none [&>*:not(:first-child)]:border-l-0 [&>*:not(:last-child)]:rounded-r-none',
-    vertical:
-      'flex-col [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:border-t-0 [&>*:not(:last-child)]:rounded-b-none',
-  };
-
-  return cn(baseStyles, orientationStyles[orientation]);
-}
-
-interface ButtonGroupProps extends React.ComponentProps<'div'> {
-  orientation?: 'horizontal' | 'vertical';
-}
+const buttonGroupVariants = cva(
+  "flex w-fit items-stretch [&>*]:focus-visible:z-10 [&>*]:focus-visible:relative [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md has-[>[data-slot=button-group]]:gap-2",
+  {
+    variants: {
+      orientation: {
+        horizontal:
+          "[&>*:not(:first-child)]:rounded-l-none [&>*:not(:first-child)]:border-l-0 [&>*:not(:last-child)]:rounded-r-none",
+        vertical:
+          "flex-col [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:border-t-0 [&>*:not(:last-child)]:rounded-b-none",
+      },
+    },
+    defaultVariants: {
+      orientation: "horizontal",
+    },
+  }
+)
 
 function ButtonGroup({
   className,
-  orientation = 'horizontal',
+  orientation,
   ...props
-}: ButtonGroupProps) {
+}: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>) {
   return (
     <div
       role="group"
       data-slot="button-group"
       data-orientation={orientation}
-      className={cn(getButtonGroupVariants(orientation), className)}
+      className={cn(buttonGroupVariants({ orientation }), className)}
       {...props}
     />
-  );
-}
-
-interface ButtonGroupTextProps extends React.ComponentProps<'div'> {
-  asChild?: boolean;
+  )
 }
 
 function ButtonGroupText({
   className,
   asChild = false,
   ...props
-}: ButtonGroupTextProps) {
-  const Comp = asChild ? 'div' : 'div';
+}: React.ComponentProps<"div"> & {
+  asChild?: boolean
+}) {
+  const Comp = asChild ? Slot : "div"
+
   return (
     <Comp
-      data-slot="button-group-text"
       className={cn(
-        'bg-muted flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium shadow-xs [&_svg]:pointer-events-none [&_svg:not([class*="size-"])]:size-4',
+        "bg-muted flex items-center gap-2 rounded-md border px-4 text-sm font-medium shadow-xs [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     />
-  );
-}
-
-interface ButtonGroupSeparatorProps extends React.ComponentProps<'div'> {
-  orientation?: 'horizontal' | 'vertical';
+  )
 }
 
 function ButtonGroupSeparator({
   className,
-  orientation = 'vertical',
+  orientation = "vertical",
   ...props
-}: ButtonGroupSeparatorProps) {
-  const separatorClasses =
-    orientation === 'vertical' ? 'w-px h-auto' : 'h-px w-auto';
-
+}: React.ComponentProps<typeof Separator>) {
   return (
-    <div
+    <Separator
       data-slot="button-group-separator"
+      orientation={orientation}
       className={cn(
-        'bg-border relative !m-0 self-stretch',
-        separatorClasses,
+        "bg-input relative !m-0 self-stretch data-[orientation=vertical]:h-auto",
         className
       )}
       {...props}
     />
-  );
+  )
 }
 
-export { ButtonGroup, ButtonGroupSeparator, ButtonGroupText };
-export type {
-  ButtonGroupProps,
-  ButtonGroupTextProps,
-  ButtonGroupSeparatorProps,
-};
+export {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+  buttonGroupVariants,
+}
